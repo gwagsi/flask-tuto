@@ -1,9 +1,11 @@
 from flask import Flask, request
+from config.database import db, Config
 from controller.authentication_controller import AuthenticationController
-from config.db import Config
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import logging
+
 
 logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
@@ -12,18 +14,20 @@ auth_controller = AuthenticationController()
 
 
 # configure the app with the database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
-app.config['SQLALCHEMY_ECHO'] = Config.SQLALCHEMY_ECHO
-app.config['SECRET_KEY'] = Config.SECRET_KEY
+app.config.from_object(Config)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 
 
 @app.post('/register')
 def register_user():
     data = request.get_json()
     return auth_controller.register_user(data=data)
+
+
+@app.get('/user/<email>')
+def get_user(email):
+    return auth_controller.getUser(email=email)
 
 
 @app.post('/login')
